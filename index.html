@@ -1,0 +1,427 @@
+<title>Gold & NAS100 Call Journal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ink: #1c2029;
+    --ink-soft: #454a55;
+    --muted: #726f64;
+    --paper: #f5f4ef;
+    --surface: #ffffff;
+    --rule: #ddd9cd;
+    --accent: #a9772a;
+    --accent-soft: #f1e4cc;
+    --win: #2e7d4a;
+    --win-soft: #e3efe4;
+    --loss: #b24b3c;
+    --loss-soft: #f6e5e1;
+    --shadow: 0 1px 2px rgba(28,32,41,.04), 0 6px 16px rgba(28,32,41,.05);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #ece9e0;
+      --ink-soft: #c7c3b6;
+      --muted: #938f81;
+      --paper: #14171c;
+      --surface: #1b1f26;
+      --rule: #2c313b;
+      --accent: #d9ac57;
+      --accent-soft: #3a301c;
+      --win: #7fc492;
+      --win-soft: #223228;
+      --loss: #e08e7c;
+      --loss-soft: #3a2521;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #ece9e0;
+    --ink-soft: #c7c3b6;
+    --muted: #938f81;
+    --paper: #14171c;
+    --surface: #1b1f26;
+    --rule: #2c313b;
+    --accent: #d9ac57;
+    --accent-soft: #3a301c;
+    --win: #7fc492;
+    --win-soft: #223228;
+    --loss: #e08e7c;
+    --loss-soft: #3a2521;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+    margin: 0;
+    padding-inline: 20px;
+    padding-block: 32px 64px;
+  }
+  .page { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+  h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; margin: 0; text-wrap: balance; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600;
+  }
+  .num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  header { display: flex; flex-direction: column; gap: 6px; }
+  header h1 { font-size: 34px; }
+  header p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .status {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+    padding: 20px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .status-headline { display: flex; align-items: flex-start; gap: 12px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .status-headline:first-child { padding-top: 0; border-top: none; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex: none; background: var(--muted); }
+  .status-dot.live { background: var(--win); box-shadow: 0 0 0 4px var(--win-soft); }
+  .status-dot.wait { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .status-text h2 { font-size: 17px; }
+  .status-text p { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+  .status-text .reasoning { color: var(--ink-soft); font-style: italic; margin-top: 8px; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .stat { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .stat .v { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .stat .v.win { color: var(--win); } .stat .v.loss { color: var(--loss); }
+
+  .mechanics {
+    border: 1px dashed var(--rule); border-radius: 14px; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .mechanics h3 { font-size: 15px; font-family: 'Public Sans', sans-serif; font-weight: 700; }
+  .mechanics dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: 13.5px; }
+  .mechanics dt { color: var(--muted); }
+  .mechanics dd { margin: 0; }
+  .mechanics .rule-note { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 2px; line-height: 1.5; }
+
+  .journal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .journal-head h2 { font-size: 20px; }
+  .journal-head .count { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  .days { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
+
+  /* Both levels are native <details>/<summary> -- collapsed by default costs zero extra
+     JS, stays keyboard/tap accessible, and the marker triangle is replaced with a chevron
+     that rotates via the [open] attribute selector rather than a click handler. */
+  summary { cursor: pointer; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .chevron {
+    display: inline-block; flex: none; width: 14px; height: 14px; margin-top: 3px;
+    color: var(--muted); transition: transform .15s ease;
+  }
+  details[open] > summary .chevron { transform: rotate(90deg); }
+
+  .day-card {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .day-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 18px 20px; }
+  .day-top .day-left { display: flex; align-items: baseline; gap: 10px; }
+  .day-date { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; }
+  .day-summary { font-size: 12.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .day-summary .win { color: var(--win); } .day-summary .loss { color: var(--loss); }
+
+  .timeline { display: flex; flex-direction: column; padding: 0 20px 18px; }
+  .check-row { border-top: 1px solid var(--rule); }
+  .check-row:first-child { border-top: none; }
+  .check-summary { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+  .check-time { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); flex: none; width: 46px; }
+  .check-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+  .check-body-detail { padding: 0 0 14px 24px; display: flex; flex-direction: column; gap: 6px; }
+  .symbol-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: .03em; padding: 2px 8px; border-radius: 999px;
+    background: var(--ink); color: var(--paper);
+  }
+  .action-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--rule); color: var(--muted);
+  }
+  .action-badge.OPEN { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+  .conf-note { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .outcome-pill { font-size: 11px; font-weight: 700; letter-spacing: .03em; padding: 2px 9px; border-radius: 999px; }
+  .outcome-pill.WIN { background: var(--win-soft); color: var(--win); }
+  .outcome-pill.LOSS { background: var(--loss-soft); color: var(--loss); }
+  .outcome-pill.BREAKEVEN { background: var(--accent-soft); color: var(--accent); }
+  .outcome-pill.LIVE { background: var(--win-soft); color: var(--win); }
+  .outcome-pill.PENDING { background: var(--accent-soft); color: var(--accent); }
+  .outcome-pill.EXPIRED { background: var(--rule); color: var(--muted); }
+  .check-reason { font-size: 14px; line-height: 1.55; color: var(--ink); margin: 0; font-style: italic; }
+  .check-reason.skip { color: var(--ink-soft); }
+
+  .trade-data { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px 14px; font-size: 12.5px; margin-top: 2px; }
+  .trade-data .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+  .trade-data .v { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .trade-data .v.win { color: var(--win); } .trade-data .v.loss { color: var(--loss); }
+
+  .empty-journal {
+    border: 1px dashed var(--rule); border-radius: 14px; padding: 20px; text-align: center;
+    color: var(--muted); font-size: 14px; display: flex; flex-direction: column; gap: 4px; margin-top: 14px;
+  }
+  .empty-journal strong { color: var(--ink-soft); font-family: 'Public Sans', sans-serif; }
+
+  footer { text-align: center; font-size: 12px; color: var(--muted); padding-top: 8px; }
+  footer .refresh-note { margin-top: 4px; }
+
+  @media (max-width: 460px) {
+    header h1 { font-size: 28px; }
+    .stat-row { grid-template-columns: 1fr; }
+    .trade-data { grid-template-columns: repeat(2, 1fr); }
+    .check-time { width: 40px; }
+  }
+</style>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">XAUUSD + NAS100 · Demo Account</div>
+    <h1>Gold & NAS100 Call Journal</h1>
+    <p>Checked hourly, traded on conviction — not the clock. One shared risk budget across every instrument below.</p>
+  </header>
+
+  <div class="status" id="statusCard"></div>
+
+  <div class="mechanics">
+    <h3>How this works</h3>
+    <dl id="mechanicsList"></dl>
+    <div class="rule-note">No strategy wins every trade. The bar is a genuinely reasoned call each time and an honest logged outcome — win or lose — not a guaranteed win.</div>
+  </div>
+
+  <div>
+    <div class="journal-head">
+      <h2>Journal</h2>
+      <span class="count" id="entryCount"></span>
+    </div>
+    <div class="days" id="days"></div>
+  </div>
+
+  <footer>
+    <div id="lastUpdated"></div>
+    <div class="refresh-note">Auto-updated after each hourly check.</div>
+  </footer>
+</div>
+
+<script>
+  // ---- data snapshot (embedded at publish time by scripts/refresh_combined_dashboard.py -- do not hand-edit, regenerate instead) ----
+  const GROUP = {"windowStartUtc": "08:00", "windowEndUtc": "20:00", "maxTradesPerDay": 5, "dailyFloorUsd": 100, "pendingOrderTtlHours": 1, "newsGateEnabled": true, "newsPreMinutes": 30, "newsPostMinutes": 60, "budgetStatusText": "1/5 trades, $-52.09 of -$100 floor (combined across brain_trade, brain_trade_nas100)", "lastUpdatedUtc": "2026-09-16T21:54:55.303525Z"}; // shared window/budget/news-gate settings -- identical across every instrument in the group
+  const INSTRUMENTS = [{"symbol": "XAUUSD", "tpPips": 101, "slPips": 99, "lots": 0.05, "currentState": null}, {"symbol": "NAS100", "tpPips": 101, "slPips": 99, "lots": 0.5, "currentState": null}]; // per-instrument symbol/bracket/size/currentState
+  // Every hourly check across every instrument, tagged with .symbol, oldest first
+  const CHECKS = [{"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T09:13:02.595009+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 65, "reasoning": "First check of the day (09:12Z). Price broke out overnight from the ~4260-4310 two-day range up to 4322-4339 and is consolidating near highs (4330) -- objectively a real bullish move, not a reversal guess. But web research shows the FOMC rate decision, statement, and press conference land later today, described consistently as this week's dominant gold catalyst with a genuinely disputed hike probability. That's a major two-sided event still ahead in the window -- entering LONG now would really be a bet on the Fed outcome dressed up as a technical breakout, and a ~100-pip bracket is exactly the kind of stop a decision-announcement wick can tag on noise regardless of the eventual real direction. Mechanical news gate is clear only because the event is still hours out, not because the risk isn't real. Passing this hour; will reassess after the announcement once the market has shown its actual reaction, or on a genuine pullback/confirmation level before then.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T09:13:28.405136+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 0, "reasoning": "cTrader API rejected the access token (CH_ACCESS_TOKEN_INVALID) even after the automatic refresh in load_ctrader_settings -- no broker connection this hour, so no candles, news-gate status, prior-checks log, or track record were available to reason from. Fixing this needs an interactive OAuth re-login (scripts/ctrader_oauth_login.py), which is out of scope for an unattended check. No basis to evaluate a setup, so skipping rather than guessing blind. Flagging for manual attention: re-run ctrader_oauth_login.py to restore the token pair before the next hourly check.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T09:39:27.527846+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 25, "reasoning": "No material change from the 09:13Z read 25min ago: price is still chopping in a tight ~4322-4339 range for the last 5 H1 bars, well above the prior 4260-4310 range but not producing a fresh breakout above the 4341 overnight high nor a clean pullback to a defined support (e.g. 4310-4322) with rejection -- exactly the 'marginal, choppy' setup type, not the 'strong, fast-moving, several hours of room' type. Confirmed via web research: FOMC rate decision is 18:00 UTC today (~8.5h out), press conference 18:30 UTC, hike probability genuinely disputed, described as this week's dominant gold catalyst. DXY ~99.66, modestly firmer. With that big two-sided event still ahead and price offering no decisive trigger right now, entering would be chasing chop into a headline-risk session rather than acting on a real read. Passing; will reassess next hour for either a clean breakout above ~4341 or a pullback/rejection at 4310-4322, and separately for the post-FOMC reaction once it lands.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T09:46:13.661691+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 20, "reasoning": "No material change from the 09:39Z check 6 minutes ago: price is still consolidating in the same 4322-4339 range (last closed H1 candle 08:00 UTC, close 4330.14), with no fresh breakout above the 4341 overnight high and no clean pullback/rejection at 4310-4322 support. FOMC rate decision (18:00 UTC) and press conference (18:30 UTC) remain ~8.25h out and still the dominant two-sided catalyst for the session, per the consistent research from the two earlier legitimate checks today. This hour's fresh WebSearch returned internally inconsistent, unreliable results (claiming gold is at a 'six-week low' from dollar strength, directly contradicted by our own OHLC data showing an overnight breakout to multi-day highs, and sourced mostly from generic evergreen pages / an unrelated July article rather than grounded current reporting) -- discounting that noise rather than acting on it. No decisive trigger and a major event still ahead; passing.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T10:01:04.801596+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 25, "reasoning": "10:00Z check, no material change from the four earlier checks today. Price is pressing the top of the 4322-4339 consolidation (last closed 09:00 H1 candle: open 4330.23, high 4339.49, low 4327.49, close 4338.03) -- a real bullish candle, but the high (4339.49) still falls short of the 4341 overnight high that prior checks flagged as the actual breakout trigger, and there's no pullback/rejection at 4310-4322 support either. So this is 'testing resistance' not 'confirmed break' -- exactly the ambiguous case where forcing an entry would be chasing the wick rather than acting on a real signal. FOMC rate decision is still ~8h out (18:00 UTC decision, 18:30 UTC presser) and remains genuinely two-sided: web research this hour shows wildly divergent hike-probability estimates across sources (26% to 92%), confirming this is real disputed uncertainty, not settled consensus dressed up as risk. DXY ~99.66, modestly firm, consistent with prior reads. One search result claimed gold is near 'five-week lows' -- directly contradicted by our own OHLC data showing multi-day highs, likely the same stale/recycled article earlier checks already discounted; trusting our broker data over it. With no decisive trigger and 8 hours of two-sided event risk still ahead, passing. Will reassess for either a confirmed close above 4341, a clean pullback/rejection at 4310-4322, or the post-FOMC reaction once the decision lands.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T11:03:04.209537+00:00", "action": "OPEN", "direction": "LONG", "order_type": "MARKET", "trigger_price": null, "confidence": 60, "reasoning": "Confirmed the exact trigger all 5 prior checks today were waiting for: a decisive close above the 4341 overnight-breakout high. The 10:00 UTC H1 candle closed at 4350.97, right at its high, and M5 detail since shows healthy stair-step continuation -- shallow 3-7 pip pullbacks bought back within minutes, each consolidation resolving to a fresh high, most recently a dip to 4345.46 at 10:50 recovered to a new high of 4350.97 closing flat-top at 10:55 (no upper wick) -- aggressive buying, not exhaustion. This sits on top of the broader multi-day uptrend (4260s two days ago to 4350s now). FOMC decision (18:00 UTC) / presser (18:30 UTC) is a real two-sided catalyst (~58-60% hike odds per fresh search, consistent with earlier checks' research), but the automatic pre-news close gives this position a genuine ~6h runway (now to ~17:00 UTC) to resolve on its own merits before being backstopped -- not a reason to blanket-pass on a confirmed technical trigger. Entering MARKET since price is closing at fresh highs with no retracement showing yet -- waiting for a pullback risks missing a trend that keeps getting bought on every dip. Main risk acknowledged: this is a pure breakout-continuation entry, not a pullback/retest entry, so there's real risk of buying an extended move right before a pre-FOMC lull stalls it.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T12:01:23.551043+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 60, "reasoning": "12:00Z check: position from the 11:03Z breakout entry (LONG, entry 4350.96, SL 4341.06, TP 4361.06) is still open per both state file and live broker query -- nothing to decide this hour since only one position can be open at a time. Last closed H1 candle (11:00) printed 4341.77, a pullback off the 4353.58 high but still well above the 4341 breakout trigger and above the SL, so the original thesis (stair-step continuation off the overnight range breakout) hasn't been invalidated. FOMC decision (18:00 UTC) / presser (18:30 UTC) still ~6h out; pre-news close remains the backstop if this doesn't resolve first. No action available or needed -- will reassess next hour once this position has closed (TP/SL/pre-news) and budget allows another look.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T12:36:47.539594+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 20, "reasoning": "12:35Z check. The 11:03Z breakout-continuation LONG (entry 4350.96, SL 4341.06) stopped out this hour for -104.9p -- the exact risk that entry's own reasoning flagged (extended move stalling into pre-FOMC chop). Since the stop, price has round-tripped through the old 4341 trigger level repeatedly: 12:00 candle wicked to 4340.47 (the stop), 12:05 rallied back to 4348.35, then fell to a 4334.65 low at 12:30, now sitting at 4341.44 -- a ~14-pip whipsaw range with no directional resolution, not a fresh breakout or a clean pullback/rejection. This is the textbook 'marginal, choppy' case the playbook says to pass on, not a genuine trigger. Web research this hour: FOMC hike odds have converged to 88-93% (vs. the 26-92%/58-60% dispersion earlier checks saw) -- decision at 18:00 UTC (~5.5h out), presser 18:30 UTC, still the dominant catalyst and now close to consensus-priced, meaning the real volatility risk shifts to the statement/dot-plot/press-conference tone rather than the headline number itself, which is exactly the kind of two-sided surprise a ~100-pip bracket shouldn't be sitting in front of without a real trigger. Today's budget still has room (one loss booked, floor is -200p) so this isn't a stand-down -- just nothing to act on this hour. Will reassess next hour for a clean re-break of 4341/4350s or a defined support rejection, and separately for the post-FOMC reaction.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T14:02:22.875793+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 30, "reasoning": "14:00Z check. No position open (11:03Z LONG stopped out -104.9p at 12:35Z; budget still has room under the -200p floor). Price spiked to a fresh marginal high (4360.50 at 13:10-13:15) then reversed hard, grinding down all hour to close at 4338.55 -- right back at the prior 4337.81 swing low. A real rejection of the new high, but a support TEST, not a confirmed breakdown, so shorting now would repeat this morning's mistake (acting on an unconfirmed level) in the opposite direction. Web research matched what prior checks already had (DXY ~99.66-99.7, 25bp hike ~92% priced via CME FedWatch) -- no new information, confirming the real event risk is the dot-plot/press-conference tone rather than the headline decision. FOMC now ~4-4.5h out (decision 18:00 UTC, presser 18:30 UTC), less runway than this morning's entry had, with no clean trigger in either direction. Will reassess next hour for a clean close below ~4334-4337 (breakdown) or a recovery above ~4348-4350 (failed breakdown), and separately watch the post-FOMC reaction. [Reconstructed from logs/brain_trade_open_agent.log after an accidental CSV migration error truncated this row -- may not exactly match the original wording.]", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T15:01:44.953165+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 25, "reasoning": "15:00Z check. Price swept a fresh intraday low (4324.35) then reversed to close the 14:00 H1 candle at a fresh daily high (4355.00) -- a 36-pip single-hour range and the third violent whipsaw of the day around the 4324-4361 zone. FOMC decision lands at 18:00 UTC (hike odds now 84-93%, near-consensus, so real risk has shifted to dot-plot/tone) with the press conference at 18:30. Pre-news close would force-exit any position opened now by ~17:00 UTC -- only ~2h of runway, far less than the ~6h the day's one trade (11:03Z LONG) had, and that trade already got stopped out (-104.9p) chasing a similar fresh-high breakout that stalled into chop. A repeated-whipsaw session with minimal runway before a major two-sided event doesn't meet the bar for a confident entry. Daily budget untouched by this (still room under -200p floor after the one loss). [Reconstructed from logs/brain_trade_open_agent.log after an accidental CSV migration error truncated this row -- may not exactly match the original wording.]", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T16:02:22.479650+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 20, "reasoning": "16:00Z check. Price still whipsawing in the same 4324-4361 zone for a 4th straight hour: 15:00 H1 candle ranged 4342.77-4361.61 (18.8p), closing 4352.71 -- no confirmed break above the 4361.61 high, no clean breakdown either, same indecisive chop this session has shown since 13:00. More importantly, FOMC decision lands 18:00 UTC and pre_news_close_minutes=60 means any position opened now gets force-closed by ~17:00 UTC -- under 1h of runway, far short of the ~6h the day's one real entry (11:03Z LONG, since stopped -104.9p) had. Web search this hour returned the same stale/generic result prior checks already flagged (claiming gold near a six-week low below 4300, directly contradicted by our own OHLC showing 4352 -- discounting it); the one consistent, credible data point (25bp hike ~90%+ priced) matches prior checks' read, meaning real risk is dot-plot/press-conference tone, not the headline. No decisive trigger and no meaningful runway before the backstop -- passing. Budget untouched (1/5 trades, -52.09 of -100 floor). Will reassess post-FOMC reaction next hour if a position could still get real runway before window close.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T16:03:54.890723+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 25, "reasoning": "First NAS100 check of the day. Today's price has been a steady grind higher since the 01:00 UTC low (28933) to the 15:00 close (29203, session high 29252) -- a real uptrend, but a grind, not an explosive breakout (recent hourly ranges mostly 20-80pts, one 115pt outlier at 13:00). The dominant fact this hour is timing, not direction: the Fed announces at 18:00 UTC (market pricing a surprise 25bp HIKE, not a cut -- a genuinely uncertain, high-volatility outcome) with the presser at 18:30, and this config's 60-min pre-news close backstop force-closes any open position by ~17:00 UTC. Opening now leaves only ~58 minutes of runway for a 101-point target that even today's strongest hour barely covered in range, let alone net directional move -- most likely outcome is a forced flat-ish exit before the thesis resolves, not a real win or loss. Same logic the XAUUSD side already applied this hour. Passing now; the better window is after the 18:30 presser once the post-Fed direction is clear, still leaving runway to the 20:00 hard close.", "symbol": "NAS100"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T17:01:40.021088+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 8, "reasoning": "17:00Z check. Price remains stuck in the same 4324-4361 whipsaw zone for a 6th straight hour with no confirmed break (last closed 16:00 H1 candle: 4343.77-4352.97 range, closed 4346.60 near the low -- a soft bearish candle, not a breakdown). No decisive trigger in either direction. More decisively: FOMC decision lands 18:00 UTC and pre_news_close_minutes=60 means the force-close backstop kicks in essentially right now -- opening this hour would offer ~0h of runway, even less than the 16:00 check's already-rejected under-1h setup, guaranteeing exposure would be flattened right before or into the announcement itself rather than resolving on its own merits. Web research (FXStreet, live) confirms today's FOMC (Kevin Warsh's first as Fed Chair) is the dominant catalyst, 25bp hike near-consensus priced, so real two-sided risk is presser tone/dot-plot rather than the headline -- consistent with what prior checks today already established. One search result repeated the same stale 'gold near six-week low below 4300' claim earlier checks already flagged as contradicted by our own OHLC (price is 4346, multi-day highs territory) -- discounting it again. No setup and no runway; passing. Will reassess post-FOMC reaction next hour once the announcement has landed and the window's remaining time can actually let a trade develop.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T19:05:41.495696+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 90, "reasoning": "19:05Z check. News gate BLOCKED -- FOMC Press Conference (USD, High impact, 18:30 UTC) -- per the playbook this is an automatic pass with no further research needed. Confirmed by price action itself: the 18:00 H1 candle shows a violent ~109pt range (open 4359.67, high 4366.40, low 4257.02, close 4261.24), i.e. live post-FOMC volatility still resolving. A ~100-pip bracket has no business being opened into that kind of wick risk. No position currently open (11:03Z LONG already stopped out -104.9p earlier today; budget 1/5 trades, -52.09 of -100 floor, untouched by this check). Passing; will reassess once the gate clears and price has shown its actual settled direction.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T19:05:49.456894+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 0, "reasoning": "19:05Z check. News gate BLOCKED -- FOMC press conference (USD, High impact, 18:30 UTC) still in its blocking window. Per the fixed rule, a BLOCKED gate means stop and skip without further research, no exception for how the setup looks. Separately, the 18:00 H1 candle shows the reason why: a massive 4366.40 high to 4257.02 low range on the decision/presser, price whipsawing violently and closing back down at 4261.24 -- exactly the kind of announcement-driven noise a ~100-pip bracket shouldn't be exposed to, and not a basis for a confident directional read anyway. No action; will reassess once the gate clears.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T19:09:25.534242+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 5, "reasoning": "19:09Z check. News gate still BLOCKED -- FOMC Press Conference (USD, High impact, 18:30 UTC). Per the fixed rule, a BLOCKED gate is an automatic stop with no further research needed, no exception for how price looks. The 18:00 H1 candle (4359.67 open, 4366.40 high, 4257.02 low, 4261.24 close) shows the post-decision/presser volatility -- a ~109pt range is exactly the wick risk a ~100-pip bracket shouldn't be exposed to, and price is still likely settling. No position open (11:03Z LONG already stopped out -104.9p earlier today; budget 1/5 trades, -52.09 of -100 floor, untouched). Passing; will reassess once the gate clears and price shows its settled post-FOMC direction.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T19:10:28.222471+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 5, "reasoning": "19:10Z check. News gate still BLOCKED -- FOMC Press Conference (USD, High impact, 18:30 UTC). Per the fixed rule, a BLOCKED gate is an automatic stop with no further research needed, regardless of how price looks. The 18:00 H1 candle (open 4359.67, high 4366.40, low 4257.02, close 4261.24) shows the violent post-decision/presser whipsaw (~109pt range) still working through the system -- exactly the wick risk a ~100-pip bracket shouldn't be exposed to. No position open (11:03Z LONG already stopped out -104.9p earlier today; budget 1/5 trades, -52.09 of -100 floor, untouched by this check). Passing; will reassess once the gate clears and price shows a settled post-FOMC direction.", "symbol": "XAUUSD"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T19:16:07.798490+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 5, "reasoning": "News gate BLOCKED -- FOMC Press Conference (USD, high impact, 18:30 UTC) still inside its blocking window at this 19:15Z check. Per the fixed rule, a BLOCKED gate means stop and skip with no further research, no exception. The 18:00 H1 candle shows exactly why: a violent 29173.90-> 29241.50 high -> 28926.30 low -> 28933.70 close whipsaw, a 300+ point range on the decision -- pure post-FOMC noise, not a directional read a ~100pt bracket should be exposed to. Budget stands at 1/5 trades, -$52.09 of the -$100 combined floor, untouched by this check. Will reassess once price shows a settled post-FOMC direction.", "symbol": "NAS100"}, {"date_utc": "2026-09-16", "timestamp_utc": "2026-09-16T19:16:58.618419+00:00", "action": "SKIP", "direction": null, "order_type": null, "trigger_price": null, "confidence": 5, "reasoning": "19:16Z check. News gate still BLOCKED -- FOMC Press Conference (USD, High impact, 18:30 UTC). Per the fixed rule, a BLOCKED gate is an automatic stop with no further research needed, regardless of how price looks. The 18:00 H1 candle (open 4359.67, high 4366.40, low 4257.02, close 4261.24) shows the violent post-decision/presser whipsaw (~109pt range); most recent close 4261.24 is well off the pre-FOMC 4358-4366 levels, still very likely unsettled. No position open (11:03Z LONG already stopped out -104.9p earlier today; budget 1/5 trades, -52.09 of -100 floor, untouched by this check). Passing; will reassess once the gate clears and price shows a settled post-FOMC direction.", "symbol": "XAUUSD"}];
+  const TRADES = [{"date_utc": "2026-09-16", "direction": "LONG", "order_type": "MARKET", "trigger_price": null, "reasoning": "Confirmed the exact trigger all 5 prior checks today were waiting for: a decisive close above the 4341 overnight-breakout high. The 10:00 UTC H1 candle closed at 4350.97, right at its high, and M5 detail since shows healthy stair-step continuation -- shallow 3-7 pip pullbacks bought back within minutes, each consolidation resolving to a fresh high, most recently a dip to 4345.46 at 10:50 recovered to a new high of 4350.97 closing flat-top at 10:55 (no upper wick) -- aggressive buying, not exhaustion. This sits on top of the broader multi-day uptrend (4260s two days ago to 4350s now). FOMC decision (18:00 UTC) / presser (18:30 UTC) is a real two-sided catalyst (~58-60% hike odds per fresh search, consistent with earlier checks' research), but the automatic pre-news close gives this position a genuine ~6h runway (now to ~17:00 UTC) to resolve on its own merits before being backstopped -- not a reason to blanket-pass on a confirmed technical trigger. Entering MARKET since price is closing at fresh highs with no retracement showing yet -- waiting for a pullback risks missing a trend that keeps getting bought on every dip. Main risk acknowledged: this is a pure breakout-continuation entry, not a pullback/retest entry, so there's real risk of buying an extended move right before a pre-FOMC lull stalls it.", "lots": 0.05, "sl_pips": 99.0, "tp_pips": 101.0, "entry_price": 4350.96, "exit_price": 4340.47, "pnl_pips": -104.9, "pnl_usd": -52.09, "outcome": "LOSS", "close_trigger": "auto_closed_unknown", "opened_at": "2026-09-16T11:03:04.209537+00:00", "closed_at": "2026-09-16T12:35:08.413058+00:00", "symbol": "XAUUSD"}]; // completed trades across every instrument, tagged with .symbol
+
+  // ---- helpers ----
+  function utcHM(str) { const [h, m] = str.split(":").map(Number); return { h, m }; }
+  function nextWindowStart(now) {
+    const { h, m } = utcHM(GROUP.windowStartUtc);
+    let d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, m, 0));
+    const end = utcHM(GROUP.windowEndUtc);
+    const windowEndToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), end.h, end.m, 0));
+    if (now > windowEndToday) d.setUTCDate(d.getUTCDate() + 1);
+    while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 1);
+    return d;
+  }
+  function fmtLocal(date, opts) { return date.toLocaleString(undefined, opts || { weekday: "short", hour: "numeric", minute: "2-digit" }); }
+  function fmtMoney(v) {
+    if (v === null || v === undefined || Number.isNaN(v)) return "—";
+    const sign = v > 0 ? "+" : v < 0 ? "−" : "";
+    return sign + "$" + Math.abs(v).toFixed(2);
+  }
+  function fmtPips(v) {
+    if (v === null || v === undefined || Number.isNaN(v)) return "—";
+    const sign = v > 0 ? "+" : v < 0 ? "−" : "";
+    return sign + Math.abs(v).toFixed(1) + "p";
+  }
+  function fmtPrice(v) { return v === null || v === undefined ? "—" : Number(v).toFixed(2); }
+  function toNum(v) { const n = parseFloat(v); return Number.isNaN(n) ? null : n; }
+  function triggerLabel(t) {
+    return { tp_hit: "take-profit", sl_hit: "stop-loss", hard_close_window_end: "hard close at window end",
+      pre_news_close: "closed ahead of high-impact news", cancelled_before_news: "never filled, cancelled ahead of news",
+      auto_closed_unknown: "closed automatically", auto_closed_before_next_check: "closed automatically",
+      expired_unfilled: "never filled, expired", cancelled_at_window_end: "never filled, cancelled at window end" }[t] || t;
+  }
+  function orderTypeLabel(t) {
+    return { LIMIT: "limit order", STOP: "stop order" }[t] || "";
+  }
+  function dirArrow(dir) { return dir === "LONG" ? "↑" : "↓"; }
+  function timeOf(iso) { return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }); }
+  function instrumentOf(symbol) { return INSTRUMENTS.find(i => i.symbol === symbol) || {}; }
+
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const todaysTrades = TRADES.filter(t => t.date_utc === todayUtc);
+  const todaysCumUsd = todaysTrades.reduce((s, t) => s + (toNum(t.pnl_usd) || 0), 0);
+  const todaysBudgetLeftUsd = GROUP.dailyFloorUsd != null ? GROUP.dailyFloorUsd + todaysCumUsd : null;
+
+  // ---- status card: one line per instrument (live ones first), a shared budget/count row below ----
+  (function renderStatus() {
+    const el = document.getElementById("statusCard");
+    const live = [];
+    const idle = [];
+    INSTRUMENTS.forEach(i => {
+      const cs = i.currentState;
+      if (cs && cs.date_utc === todayUtc && (cs.status === "open" || cs.status === "pending")) live.push(i);
+      else idle.push(i);
+    });
+
+    let html = "";
+    live.forEach(i => {
+      const cs = i.currentState;
+      if (cs.status === "open") {
+        html += `
+          <div class="status-headline">
+            <div class="status-dot live"></div>
+            <div class="status-text">
+              <h2>${i.symbol} — position open, ${cs.direction}</h2>
+              <p>Entered at <span class="num">${fmtPrice(cs.entry_price)}</span> · TP ${i.tpPips}p / SL ${i.slPips}p · ${i.lots} lots</p>
+              <p class="reasoning">"${cs.reasoning}"</p>
+            </div>
+          </div>`;
+      } else {
+        html += `
+          <div class="status-headline">
+            <div class="status-dot wait"></div>
+            <div class="status-text">
+              <h2>${i.symbol} — ${orderTypeLabel(cs.order_type)} waiting, ${cs.direction}</h2>
+              <p>Waiting for <span class="num">${fmtPrice(cs.trigger_price)}</span> · TP ${i.tpPips}p / SL ${i.slPips}p once filled · expires if it never gets there</p>
+              <p class="reasoning">"${cs.reasoning}"</p>
+            </div>
+          </div>`;
+      }
+    });
+    idle.forEach(i => {
+      const tradedToday = todaysTrades.some(t => t.symbol === i.symbol);
+      const next = nextWindowStart(new Date());
+      html += `
+        <div class="status-headline">
+          <div class="status-dot wait"></div>
+          <div class="status-text">
+            <h2>${i.symbol} — ${tradedToday ? "no position open right now" : "watching, no trade yet today"}</h2>
+            <p>Next check ${fmtLocal(next, { weekday: "long", hour: "numeric", minute: "2-digit" })} your time, or sooner within today's window (${GROUP.windowStartUtc}–${GROUP.windowEndUtc} UTC).</p>
+          </div>
+        </div>`;
+    });
+    el.innerHTML = html;
+
+    const wins = TRADES.filter(t => t.outcome === "WIN").length;
+    const decided = TRADES.filter(t => t.outcome === "WIN" || t.outcome === "LOSS").length;
+    const winRate = decided ? Math.round((wins / decided) * 100) + "%" : "—";
+    const cumUsd = TRADES.reduce((s, t) => s + (toNum(t.pnl_usd) || 0), 0);
+    el.innerHTML += `
+      <div class="stat-row">
+        <div class="stat"><span class="v">${TRADES.length}</span><span class="l">Trades logged</span></div>
+        <div class="stat"><span class="v">${winRate}</span><span class="l">Win rate</span></div>
+        <div class="stat"><span class="v ${cumUsd > 0 ? "win" : cumUsd < 0 ? "loss" : ""}">${TRADES.length ? fmtMoney(cumUsd) : "—"}</span><span class="l">Cumulative P&L</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><span class="v">${todaysTrades.length}/${GROUP.maxTradesPerDay}</span><span class="l">Trades today</span></div>
+        <div class="stat"><span class="v ${todaysCumUsd > 0 ? "win" : todaysCumUsd < 0 ? "loss" : ""}">${todaysTrades.length ? fmtMoney(todaysCumUsd) : "—"}</span><span class="l">Today's P&L</span></div>
+        <div class="stat"><span class="v">${todaysBudgetLeftUsd != null ? fmtMoney(Math.max(0, todaysBudgetLeftUsd)) : "—"}</span><span class="l">Budget left today</span></div>
+      </div>`;
+  })();
+
+  // ---- mechanics ----
+  const bracketList = INSTRUMENTS.map(i => `${i.symbol} ${i.tpPips}p / ${i.slPips}p`).join(" · ");
+  const sizeList = INSTRUMENTS.map(i => `${i.symbol} ${i.lots} lots`).join(" · ");
+  document.getElementById("mechanicsList").innerHTML = `
+    <dt>Window</dt><dd>${GROUP.windowStartUtc}–${GROUP.windowEndUtc} UTC, London + New York session — checked hourly per instrument, not at one fixed time</dd>
+    <dt>Entry</dt><dd>Market (right now), or a limit/stop order waiting for a specific level — auto-expires (${GROUP.pendingOrderTtlHours}h, capped at window end) with zero cost if it never fills</dd>
+    <dt>Budget</dt><dd>${GROUP.budgetStatusText} — shared across every instrument here, not one each</dd>
+    <dt>Bracket</dt><dd>Take-profit / stop-loss per trade, fixed at entry — ${bracketList}</dd>
+    <dt>News gate</dt><dd>${GROUP.newsGateEnabled ? `Paused ${GROUP.newsPreMinutes} min before / ${GROUP.newsPostMinutes} min after high-impact USD releases, and any open position is closed early ahead of one (pre_news_close_minutes)` : "Off"}</dd>
+    <dt>Size</dt><dd>${sizeList}, demo account</dd>
+    <dt>Exit</dt><dd>TP or SL if hit first — otherwise hard-closed at window end regardless of P&L</dd>
+  `;
+
+  // ---- journal: group checks + trades by day, interleaved chronologically across instruments ----
+  const dayMap = {};
+  function dayBucket(dateUtc) { return (dayMap[dateUtc] = dayMap[dateUtc] || { checks: [], trades: [] }); }
+  CHECKS.forEach(c => dayBucket(c.date_utc).checks.push(c));
+  TRADES.forEach(t => dayBucket(t.date_utc).trades.push(t));
+
+  const days = Object.keys(dayMap).sort().reverse();
+  document.getElementById("entryCount").textContent =
+    `${CHECKS.length} check${CHECKS.length === 1 ? "" : "s"} · ${TRADES.length} trade${TRADES.length === 1 ? "" : "s"}`;
+
+  const daysEl = document.getElementById("days");
+  if (days.length === 0) {
+    daysEl.innerHTML = `<div class="empty-journal"><strong>No checks logged yet.</strong><span>The first hourly check lands here once the automation starts running.</span></div>`;
+  } else {
+    const chevron = `<svg class="chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    daysEl.innerHTML = days.map((date, dayIdx) => {
+      const { checks, trades } = dayMap[date];
+      const dayUsd = trades.reduce((s, t) => s + (toNum(t.pnl_usd) || 0), 0);
+      const dayLabel = new Date(date + "T12:00:00Z").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+      const summary = trades.length
+        ? `${checks.length} check${checks.length === 1 ? "" : "s"} · ${trades.length} trade${trades.length === 1 ? "" : "s"} · <span class="${dayUsd > 0 ? "win" : dayUsd < 0 ? "loss" : ""}">${fmtMoney(dayUsd)}</span>`
+        : `${checks.length} check${checks.length === 1 ? "" : "s"} · no trade`;
+
+      const rows = checks.sort((a, b) => a.timestamp_utc.localeCompare(b.timestamp_utc)).map(c => {
+        const inst = instrumentOf(c.symbol);
+        const cs = inst.currentState;
+        const match = trades.find(t => t.symbol === c.symbol && t.opened_at === c.timestamp_utc);
+        const isCurrent = c.action === "OPEN" && !match && cs && cs.opened_at === c.timestamp_utc;
+        const isLiveOpen = isCurrent && cs.status === "open";
+        const isLivePending = isCurrent && cs.status === "pending";
+        let extra = "";
+        if (match && match.outcome === "EXPIRED") {
+          extra = `<div class="conf-note">${triggerLabel(match.close_trigger)}</div>`;
+        } else if (match) {
+          extra = `
+            <div class="trade-data">
+              <div><div class="k">Entry</div><div class="v">${fmtPrice(match.entry_price)}</div></div>
+              <div><div class="k">Exit</div><div class="v">${fmtPrice(match.exit_price)}</div></div>
+              <div><div class="k">Pips</div><div class="v ${toNum(match.pnl_pips) > 0 ? "win" : toNum(match.pnl_pips) < 0 ? "loss" : ""}">${fmtPips(toNum(match.pnl_pips))}</div></div>
+              <div><div class="k">P&L</div><div class="v ${toNum(match.pnl_usd) > 0 ? "win" : toNum(match.pnl_usd) < 0 ? "loss" : ""}">${fmtMoney(toNum(match.pnl_usd))}</div></div>
+            </div>
+            <div class="conf-note">closed on ${triggerLabel(match.close_trigger)} at ${timeOf(match.closed_at)}</div>`;
+        } else if (isLivePending) {
+          extra = `<div class="conf-note">waiting for ${fmtPrice(cs.trigger_price)} — expires if unfilled</div>`;
+        }
+        const outcomePill = match ? `<span class="outcome-pill ${match.outcome}">${match.outcome}</span>`
+          : isLiveOpen ? `<span class="outcome-pill LIVE">LIVE</span>`
+          : isLivePending ? `<span class="outcome-pill PENDING">PENDING</span>` : "";
+        const orderNote = c.order_type && c.order_type !== "MARKET"
+          ? `${orderTypeLabel(c.order_type)}${c.trigger_price ? " @ " + fmtPrice(c.trigger_price) : ""}` : "";
+        const dirLabel = c.action === "OPEN" && c.direction ? `${dirArrow(c.direction)} ${c.direction}${orderNote ? " · " + orderNote : ""}` : "";
+        return `
+          <details class="check-row">
+            <summary class="check-summary">
+              ${chevron}
+              <span class="check-time">${timeOf(c.timestamp_utc)}</span>
+              <span class="check-badges">
+                <span class="symbol-badge">${c.symbol}</span>
+                <span class="action-badge ${c.action}">${c.action}</span>
+                ${dirLabel ? `<span class="conf-note">${dirLabel}</span>` : ""}
+                ${outcomePill}
+                ${c.confidence !== null && c.confidence !== undefined && c.confidence !== "" ? `<span class="conf-note">confidence ${c.confidence}</span>` : ""}
+              </span>
+            </summary>
+            <div class="check-body-detail">
+              <p class="check-reason ${c.action === "SKIP" ? "skip" : ""}">"${c.reasoning}"</p>
+              ${extra}
+            </div>
+          </details>`;
+      }).join("");
+
+      return `
+        <details class="day-card"${dayIdx === 0 ? " open" : ""}>
+          <summary class="day-top">
+            <span class="day-left">${chevron}<span class="day-date">${dayLabel}</span></span>
+            <span class="day-summary">${summary}</span>
+          </summary>
+          <div class="timeline">${rows}</div>
+        </details>`;
+    }).join("");
+  }
+
+  document.getElementById("lastUpdated").textContent =
+    "Data current as of " + new Date(GROUP.lastUpdatedUtc).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+</script>
